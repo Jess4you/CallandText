@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="50"
+        android:weightSum="60">
+
+        <TextView
+            android:id="@+id/textViewName"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:text="SampleText"
+            android:textAlignment="center"
+            android:gravity="center"
+            android:layout_weight="30"/>
+        <TextView
+            android:id="@+id/textViewID"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:text="SampleText"
+            android:gravity="center"
+            android:layout_weight="30"/>
+    </LinearLayout>
+    <Switch
+        android:id="@+id/switchFilter"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingRight="20dp"
+        android:layout_weight="50"/>
+</LinearLayout>
