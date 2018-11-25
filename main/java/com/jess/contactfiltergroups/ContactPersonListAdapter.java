@@ -50,6 +50,7 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
         TextView tvName = (TextView)convertView.findViewById(R.id.textViewName);
         final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilter);
 
+        blocked = main.getThesisdb().checkIfBlockedByID(id);
         tvID.setText(id);
         tvName.setText(name);
         if(blocked){
@@ -72,10 +73,12 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
                 else {
                     //delete values of contactperson in database
                     contactPerson.setContactBlocked(false);
+                    if(main.getThesisdb().removeBlocked(id)){
+                        Log.v("Delete:","Success");
+                    }
                 }
                 Log.v("Contact state=",""+contactPerson.isContactBlocked());
             }
-
         });
         return convertView;
     }

@@ -1,10 +1,13 @@
 package com.jess.contactfiltergroups;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,14 +24,18 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class ContactFilterGroups extends AppCompatActivity {
+    private int MY_PERMISSIONS_REQUEST_SMS_RECEIVE = 10;
     DatabaseHelper thesisdb;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_filter_groups);
         ListView contactPersonListView = (ListView)findViewById(R.id.contactPersonListView);
-        thesisdb = new DatabaseHelper(this);
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.RECEIVE_SMS},
+                MY_PERMISSIONS_REQUEST_SMS_RECEIVE);
 
+        thesisdb = new DatabaseHelper(this);
         //database destroyer do not uncomment and run!!
         //this.deleteDatabase("thesis.db");
 
@@ -77,5 +84,13 @@ public class ContactFilterGroups extends AppCompatActivity {
     //method for using the helper in other classes
     public DatabaseHelper getThesisdb(){
         return thesisdb;
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == MY_PERMISSIONS_REQUEST_SMS_RECEIVE) {
+            // YES!!
+            Log.i("TAG", "MY_PERMISSIONS_REQUEST_SMS_RECEIVE --> YES");
+        }
     }
 }

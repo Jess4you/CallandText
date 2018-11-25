@@ -24,9 +24,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CONTACTNUM_ID = "contactNum_id";
     public static final String COLUMN_CONTACTNUM_NUMBER = "number";
     //table for contact number bridge
+    //s
     public static final String TABLE_CONTACT_NUM_DETAILS = "contactNumDetails";
     public static final String COLUMN_FK_CONTACT_ID = COLUMN_CONTACT_ID ;
     public static final String COLUMN_FK_CONTACTNUM_ID = COLUMN_CONTACTNUM_ID;
+
+    public static final String TABLE_CONTACTGROUPS = "contactgroup";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
@@ -56,6 +59,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void dropTable(SQLiteDatabase db, String tablename){
 
     }
+    public boolean checkIfBlockedByID(String id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT "+COLUMN_CONTACT_ID+" FROM "+TABLE_CONTACTS+" WHERE "+COLUMN_CONTACT_ID+" = "+id+";", null);
+        if(cursor.getCount() <= 0){
+            cursor.close();
+            return false;
+        }
+        cursor.close();
+        return true;
+    }
+    public boolean checkIfBlockedByName(String name){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM "+TABLE_CONTACTS+" WHERE "+COLUMN_CONTACT_NAME+" = "+name+";", null);
+        if(cursor.getCount() <= 0){
+            cursor.close();
+            return false;
+        }
+        cursor.close();
+        return true;
+    }
     public boolean insertInto(String id, String name, String[] contactnums){
         long breaker;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -79,6 +102,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 return false;
             contentValues.clear();
         }
+        return true;
+    }
+    //remove blocked numbers from contacts
+    public boolean removeBlocked(String id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT "+COLUMN_FK_CONTACTNUM_ID+" FROM "+TABLE_CONTACT_NUM_DETAILS+" WHERE "+COLUMN_FK_CONTACT_ID+" = "+id,null);
+        String tempContactNumIds;
+        for (int i = 0; cursor.moveToNext(); i++){
+            tempContactNumIds = cursor.getString(cursor.getColumnIndex(COLUMN_FK_CONTACTNUM_ID));
+            db.delete(TABLE_CONTACTNUMS, COLUMN_CONTACTNUM_ID+" = "+tempContactNumIds,null);
+        }
+        db.delete(TABLE_CONTACTS,COLUMN_CONTACT_ID+" = "+id,null);
+        db.delete(TABLE_CONTACT_NUM_DETAILS,COLUMN_FK_CONTACT_ID+" = "+id,null);
         return true;
     }
 
