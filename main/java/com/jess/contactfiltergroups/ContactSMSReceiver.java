@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.telephony.*;
 import android.util.Log;
+import android.widget.Toast;
 
 /**
  * Created by USER on 11/24/2018.
@@ -26,7 +27,11 @@ public class ContactSMSReceiver extends BroadcastReceiver {
         //Start Application's MainActivity activity
         SQLiteDatabase db = context.openOrCreateDatabase("thesis.db", 0, null);
         Cursor contactCursor = db.rawQuery("SELECT * From contact", null);
-
+        Log.v("substringnew",messageAddress.substring(0,3));
+        if(messageAddress.substring(0,3).equals("+63")){
+            messageAddress = "0"+messageAddress.substring(3,13);
+            Log.v("substring","success");
+        }
         if(contactCursor.moveToFirst()) {
             do {
                 if(contactCursor.getString(contactCursor.getColumnIndex("name"))
@@ -36,10 +41,11 @@ public class ContactSMSReceiver extends BroadcastReceiver {
                     smsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(smsIntent);
                     Log.v("Match","Match Success");
+                    Toast.makeText(context,"BLOCKED",Toast.LENGTH_SHORT).show();
                 }
-                Log.v("Receive ToMatch",messageAddress);
+                Log.v("Received:",messageAddress);
                 Log.v(
-                        "Receive Iterations",
+                        "To Match:",
                         contactCursor.getString(contactCursor.getColumnIndex("name"))
                 );
             } while(contactCursor.moveToNext());
@@ -47,9 +53,13 @@ public class ContactSMSReceiver extends BroadcastReceiver {
         Cursor contactNumCursor = db.rawQuery("SELECT * From contactNum",null);
         if(contactNumCursor.moveToFirst()){
             do{
-                if(contactNumCursor.getString(contactNumCursor.getColumnIndex("number")).equalsIgnoreCase(messageAddress))
-                    Log.v("test","successs");
-                Log.v("test",contactNumCursor.getString(contactNumCursor.getColumnIndex("number")));
+                if(contactNumCursor.getString(contactNumCursor.getColumnIndex("number")).equalsIgnoreCase(messageAddress)) {
+                    Log.v("test", "successs");
+
+                    Toast.makeText(context,"BLOCKED",Toast.LENGTH_SHORT).show();
+                }
+                Log.v("Received:",messageAddress);
+                Log.v("To Match:",contactNumCursor.getString(contactNumCursor.getColumnIndex("number")));
             }while(contactNumCursor.moveToNext());
         }
     }

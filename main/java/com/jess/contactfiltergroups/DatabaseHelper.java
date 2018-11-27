@@ -5,7 +5,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 /**
  * Created by USER on 11/23/2018.
@@ -19,17 +22,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_CONTACT_ID = "contact_id";
     public static final String COLUMN_CONTACT_NAME = "name";
 
-    //table for contactnumbers
+    //table for contact numbers
     public static final String TABLE_CONTACTNUMS = "contactNum";
     public static final String COLUMN_CONTACTNUM_ID = "contactNum_id";
     public static final String COLUMN_CONTACTNUM_NUMBER = "number";
-    //table for contact number bridge
-    //s
+
+    //table for contact groups
+    public static final String TABLE_CONTACTGROUPS = "contactGroup";
+    public static final String COLUMN_CONTACTGROUP_ID = "contactGroup_id";
+    public static final String COLUMN_CONTACTGROUP_NAME = "name";
+    public static final String COLUMN_CONTACTGROUP_STATE = "state";
+
+    //Composite keys
+    public static final String TABLE_CONTACT_DETAILS = "contactDetails";
     public static final String TABLE_CONTACT_NUM_DETAILS = "contactNumDetails";
+
+    //Foreign keys
+    public static final String COLUMN_FK_CONTACTGROUP_ID = COLUMN_CONTACTGROUP_ID;
     public static final String COLUMN_FK_CONTACT_ID = COLUMN_CONTACT_ID ;
     public static final String COLUMN_FK_CONTACTNUM_ID = COLUMN_CONTACTNUM_ID;
-
-    public static final String TABLE_CONTACTGROUPS = "contactgroup";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
@@ -48,6 +59,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 +COLUMN_FK_CONTACTNUM_ID+" INTEGER, "
                 +"FOREIGN KEY("+COLUMN_FK_CONTACT_ID+") REFERENCES "+TABLE_CONTACTS+"("+COLUMN_CONTACT_ID+"), "
                 +"FOREIGN KEY("+COLUMN_FK_CONTACTNUM_ID+") REFERENCES "+TABLE_CONTACTNUMS+"("+COLUMN_CONTACTNUM_ID+"));");
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+ TABLE_CONTACTGROUPS +" ("
+                +COLUMN_CONTACTGROUP_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "
+                +COLUMN_CONTACTGROUP_NAME+" VARCHAR, "
+                +COLUMN_CONTACTGROUP_STATE+" VARCHAR);");
+        db.execSQL("CREATE TABLE IF NOT EXISTS "+ TABLE_CONTACT_DETAILS +" ("
+                +COLUMN_FK_CONTACTGROUP_ID+" INTEGER, "
+                +COLUMN_FK_CONTACT_ID+" VARCHAR, "
+                +"FOREIGN KEY("+COLUMN_FK_CONTACTGROUP_ID+") REFERENCES "+TABLE_CONTACTGROUPS+"("+COLUMN_CONTACTGROUP_ID+"), "
+                +"FOREIGN KEY("+COLUMN_FK_CONTACT_ID+") REFERENCES "+TABLE_CONTACTS+"("+COLUMN_CONTACT_ID+"));");
     }
 
     @Override
@@ -59,6 +79,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void dropTable(SQLiteDatabase db, String tablename){
 
     }
+
+    //Check contact if blocked by ID
     public boolean checkIfBlockedByID(String id){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT "+COLUMN_CONTACT_ID+" FROM "+TABLE_CONTACTS+" WHERE "+COLUMN_CONTACT_ID+" = "+id+";", null);
@@ -69,6 +91,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return true;
     }
+
     public boolean checkIfBlockedByName(String name){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM "+TABLE_CONTACTS+" WHERE "+COLUMN_CONTACT_NAME+" = "+name+";", null);
@@ -79,6 +102,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         cursor.close();
         return true;
     }
+
+    //Insert new contacts to blacklist
     public boolean insertInto(String id, String name, String[] contactnums){
         long breaker;
         SQLiteDatabase db = this.getWritableDatabase();
@@ -104,6 +129,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return true;
     }
+
     //remove blocked numbers from contacts
     public boolean removeBlocked(String id){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -118,4 +144,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
+    //insert new contact group
+    public boolean insertNewGroup(String name, ArrayList<ContactPerson> contactPersonArrayList){
+        long breaker;
+        int lastColumnInsert;
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_CONTACTGROUP_NAME,name);
+        contentValues.put(COLUMN_CONTACTGROUP_STATE,"0");
+        breaker = db.insert(TABLE_CONTACTGROUPS,null,contentValues);
+        if(breaker == -1)
+            return false;
+        else
+            lastColumnInsert = (int)breaker;
+        contentValues.clear();
+        for (int i = 0; i < contactPersonArrayList.size(); i++){
+            contentValues.clear();
+            contentValues.put(COLUMN_FK_CONTACT_ID,contactPersonArrayList.get(i).getContactID());
+            contentValues.put(COLUMN_FK_CONTACTGROUP_ID,lastColumnInsert);
+            breaker = db.insert(TABLE_CONTACT_DETAILS,null,contentValues);
+            if(breaker == -1)
+                return false;
+            Log.v("Grouped ["+i+"]",contactPersonArrayList.get(i).getContactName());
+            contentValues.clear();
+        }
+        return true;
+    }
+    public void changeGroupState(){
+
+    }
+    public Cursor readContact(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM "+TABLE_CONTACTS,null);
+        return cursor;
+    }
+    public Cursor readContactGroup(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM "+TABLE_CONTACTGROUPS,null);
+        return cursor;
+    }
+    public Cursor readContactDetail(){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM "+TABLE_CONTACT_DETAILS,null);
+        return cursor;
+    }
 }

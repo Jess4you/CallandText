@@ -22,14 +22,13 @@ import java.util.ArrayList;
  */
 
 public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
-    private static final String TAG = "ContactListAdapter";
+    private static final String TAG = "ContactPersonListAdapter";
     private Context mContext;
     int mResource;
     ContactFilterGroups main;
     public ContactPersonListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<ContactPerson> objects,ContactFilterGroups cfg) {
         super(context, resource, objects);
         this.mContext = context;
-
         this.mResource = resource;
         this.main = cfg;
     }
@@ -46,12 +45,10 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
         final ContactPerson contactPerson = new ContactPerson(id,name,nums);
         LayoutInflater layoutInflater = LayoutInflater.from(mContext);
         convertView = layoutInflater.inflate(mResource,parent,false);
-        TextView tvID = (TextView)convertView.findViewById(R.id.textViewID);
         TextView tvName = (TextView)convertView.findViewById(R.id.textViewName);
         final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilter);
 
         blocked = main.getThesisdb().checkIfBlockedByID(id);
-        tvID.setText(id);
         tvName.setText(name);
         if(blocked){
             swBlock.setChecked(true);
