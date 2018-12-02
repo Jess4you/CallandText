@@ -3,10 +3,16 @@ package com.jess.contactfiltergroups;
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
+import android.provider.BlockedNumberContract;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
+import android.provider.Telephony.Sms;
+import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
@@ -92,6 +98,7 @@ public class ContactFilterGroups extends AppCompatActivity {
         for(int i = 0; groupCursor.moveToNext(); i++){
             ArrayList<ContactPerson> groupContactPerson = new ArrayList<>();
             String groupID = groupCursor.getString(groupCursor.getColumnIndex("contactGroup_id"));
+            String groupState = groupCursor.getString(groupCursor.getColumnIndex("state"));
             for(int k = 0; contactDetailCursor.moveToNext(); k++){
                 String cDetGroupID = contactDetailCursor.getString(contactDetailCursor.getColumnIndex("contactGroup_id"));
                 String cDetContactID = contactDetailCursor.getString(contactDetailCursor.getColumnIndex("contact_id"));
@@ -104,11 +111,13 @@ public class ContactFilterGroups extends AppCompatActivity {
                     }
                 }
             }
-            ContactGroup contactGroup = new ContactGroup(groupCursor.getColumnName(groupCursor.getColumnIndex("name")),groupContactPerson,"0");
+            ContactGroup contactGroup = new ContactGroup(groupCursor.getColumnName(groupCursor.getColumnIndex("name")),groupContactPerson,groupState);
+            contactGroup.setId(groupID);
             contactGroupArrayList.add(contactGroup);
             Log.v("Retrieved group from DB",contactGroup.getName());
-        }
+            Log.v("State check",contactGroup.getState());
 
+        }
         //Attack contact group arraylist retrieved from database to listview
         final ContactGroupListAdapter contactGroupListAdapter = new ContactGroupListAdapter(this,R.layout.adapter_view_contactgroups,contactGroupArrayList,this);
         contactGroupListView.setAdapter(contactGroupListAdapter);
@@ -179,4 +188,41 @@ public class ContactFilterGroups extends AppCompatActivity {
             Log.i("TAG", "MY_PERMISSIONS_REQUEST_SMS_RECEIVE --> YES");
         }
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        /**
+         * if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            if(!Telephony.Sms.getDefaultSmsPackage(getApplicationContext()).equals(getApplicationContext().getPackageName())) {
+                Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+                intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                        getApplicationContext().getPackageName());
+                startActivity(intent);
+            }
+        }**/
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            if(!Telephony.Sms.getDefaultSmsPackage(this).equals("com.jess.contactfiltergroups")){
+                AlertDialog.Builder builder = new AlertDialog.Builder(ContactFilterGroups.this);
+                builder.setMessage("This app is not set as your default messaging app. Do you want to set it as default?")
+                        .setCancelable(false).setTitle("Alert!")
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent intent = new Intent(Sms.Intents.ACTION_CHANGE_DEFAULT);
+                                intent.putExtra(Sms.Intents.EXTRA_PACKAGE_NAME, getPackageName());
+                                startActivity(intent);
+                            }
+                        });
+                builder.show();
+            }
+        }
+    }
+
+    
 }

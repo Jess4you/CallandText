@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
     private static final String TAG = "ContactGroupListAdapter";
+    String state = "0";
     private Context mContext;
     int mResource;
     ContactFilterGroups main;
@@ -45,7 +46,7 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
         TextView tvName = (TextView)convertView.findViewById(R.id.textViewNameGroups);
         final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilterGroups);
 
-        main.getThesisdb().readContactGroup();
+        boolean active = main.getThesisdb().checkIfGroupState1(id);
         swBlock.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
             @Override
@@ -53,16 +54,24 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
                 Log.v("Switch State=", ""+isChecked);
 
                 if(swBlock.isChecked()) {
-                    main.getThesisdb().readContactGroup();
-                    main.getThesisdb().changeGroupState();
+                    state = "1";
+                    if(main.getThesisdb().changeGroupState(id,state))
+                        Log.v("On:","Success");
                 }
                 else {
-                    main.getThesisdb().changeGroupState();
+                    state = "0";
+                    if(main.getThesisdb().changeGroupState(id,state))
+                        Log.v("Off","Success");
                 }
             }
         });
+        if(active){
+            swBlock.setChecked(true);
+        }else{
+            swBlock.setChecked(false);
+        }
         //transfer the person object with the information
-        final ContactGroup contactGroup = new ContactGroup(name,contactPersonArrayList,"0");
+        final ContactGroup contactGroup = new ContactGroup(name,contactPersonArrayList,state);
         tvName.setText(name);
         return convertView;
     }

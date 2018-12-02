@@ -18,7 +18,8 @@ public class ContactSMSReceiver extends BroadcastReceiver {
     private static final String TAG = "Message received";
     @Override
     public void onReceive(Context context, Intent intent) {
-
+        abortBroadcast();
+        Log.v("text",""+getAbortBroadcast());
         DatabaseHelper thesisdb = new DatabaseHelper(context);
         Bundle pudsBundle = intent.getExtras();
         Object[] pdus = (Object[]) pudsBundle.get("pdus");
@@ -42,6 +43,7 @@ public class ContactSMSReceiver extends BroadcastReceiver {
                     context.startActivity(smsIntent);
                     Log.v("Match","Match Success");
                     Toast.makeText(context,"BLOCKED",Toast.LENGTH_SHORT).show();
+                    abortBroadcast();
                 }
                 Log.v("Received:",messageAddress);
                 Log.v(
@@ -57,6 +59,8 @@ public class ContactSMSReceiver extends BroadcastReceiver {
                     Log.v("test", "successs");
 
                     Toast.makeText(context,"BLOCKED",Toast.LENGTH_SHORT).show();
+                    abortBroadcast();
+                    Log.v("Abortbroadcast", "success");
                 }
                 Log.v("Received:",messageAddress);
                 Log.v("To Match:",contactNumCursor.getString(contactNumCursor.getColumnIndex("number")));

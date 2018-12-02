@@ -170,7 +170,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return true;
     }
-    public void changeGroupState(){
+    //change state of the group
+    public boolean changeGroupState(String groupID, String state){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(COLUMN_CONTACTGROUP_STATE,state);
+        if(db.update(TABLE_CONTACTGROUPS,contentValues,COLUMN_CONTACTGROUP_ID+"= ?", new String[]{groupID})>0){
+            Log.v("State change group "+groupID, state);
+            return true;
+        }
+        return false;
+    }
+    public boolean checkIfGroupState1(String groupID){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT "+COLUMN_CONTACTGROUP_STATE+" FROM "+TABLE_CONTACTGROUPS+" WHERE "+COLUMN_CONTACTGROUP_ID+" = "+groupID+";", null);
+        while (cursor.moveToNext()){
+            String state = cursor.getString(cursor.getColumnIndex(COLUMN_CONTACTGROUP_STATE));
+            if(state.equalsIgnoreCase("1")){
+                cursor.close();
+                return true;
+            }
+        }
+        cursor.close();
+        return false;
 
     }
     public Cursor readContact(){
