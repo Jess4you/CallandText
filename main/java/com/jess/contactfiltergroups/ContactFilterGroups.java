@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
@@ -32,10 +33,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ContactFilterGroups extends AppCompatActivity {
     private int MY_PERMISSIONS_REQUEST_SMS_RECEIVE = 10;
     DatabaseHelper thesisdb;
+    String searchText = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -169,16 +172,29 @@ public class ContactFilterGroups extends AppCompatActivity {
                 });
                 saveDialog.show();
                 //unknown log error sendUserActionEvent() returned on dialog implementation when saving
-
             }
         });
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     //method for using the helper in other classes
-    public DatabaseHelper getThesisdb(){
+    public DatabaseHelper getThesisdb () {
         return thesisdb;
     }
-
     //Permissions: sms receive request
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -200,7 +216,7 @@ public class ContactFilterGroups extends AppCompatActivity {
                 startActivity(intent);
             }
         }**/
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+        /*if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
             if(!Telephony.Sms.getDefaultSmsPackage(this).equals("com.jess.contactfiltergroups")){
                 AlertDialog.Builder builder = new AlertDialog.Builder(ContactFilterGroups.this);
                 builder.setMessage("This app is not set as your default messaging app. Do you want to set it as default?")
@@ -221,7 +237,7 @@ public class ContactFilterGroups extends AppCompatActivity {
                         });
                 builder.show();
             }
-        }
+        }*/
     }
 
     
