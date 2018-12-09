@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.BlockedNumberContract;
 import android.provider.ContactsContract;
@@ -22,6 +23,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -38,13 +40,19 @@ import java.util.List;
 public class ContactFilterGroups extends AppCompatActivity {
     private int MY_PERMISSIONS_REQUEST_SMS_RECEIVE = 10;
     DatabaseHelper thesisdb;
+    ListView contactPersonListView;
+    ListView contactGroupListView;
+    ArrayList<ContactPerson> contactPersonArrayList;
+    ArrayList<ContactGroup> contactGroupArrayList;
+    ArrayAdapter contactGroupListAdapter;
+    ArrayAdapter contactPersonListAdapter;
     String searchText = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_filter_groups);
-        final ListView contactPersonListView = (ListView)findViewById(R.id.contactPersonListView);
-        final ListView contactGroupListView = (ListView)findViewById(R.id.contactGroupListView);
+        contactPersonListView = (ListView)findViewById(R.id.contactPersonListView);
+        contactGroupListView = (ListView)findViewById(R.id.contactGroupListView);
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.RECEIVE_SMS},
                 MY_PERMISSIONS_REQUEST_SMS_RECEIVE);
@@ -54,83 +62,18 @@ public class ContactFilterGroups extends AppCompatActivity {
         //[uncomment to destroy database] database destroyer do not uncomment and run!!
         //this.deleteDatabase("thesis.db");
 
-        //Retrieve list of contacts via cursor method
-        final ArrayList<ContactPerson> contactPersonArrayList = new ArrayList<>();
-        Cursor cur = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-        if (cur.moveToFirst()) { // must check the result to prevent exception
-            do {
-                final String contactID = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-                final String contactName = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+        new LoadContacts().execute();
 
-                Cursor phoneCursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,ContactsContract.CommonDataKinds.Phone.CONTACT_ID+" = ?",new String[]{contactID},null);
-
-                //Retrieve numbers of each contact
-                String[] contactNums = new String[phoneCursor.getCount()];
-                for(int i = 0;phoneCursor.moveToNext();i++){
-                    String number = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    if(number.substring(0,3).equals("+63")&&number.length()==13){
-                        number = "0"+number.substring(3,13);
-                        Log.v("substring","success");
-                    }else if(number.substring(0,3).equals("+63")&&number.length()==11){
-                        number = "0"+number.substring(3,11);
-                        Log.v("substring","success");
-
-                    }
-                    contactNums[i] = number;
-                    Log.d("contact",contactName);
-                    Log.d("number",contactNums[i]);
-                }
-                ContactPerson contactPerson = new ContactPerson(contactID,contactName,contactNums);
-                contactPersonArrayList.add(contactPerson);
-            } while (cur.moveToNext());
-        } else {
-            // empty
-        }
+        //AGENDA
+        //-https://vshivam.wordpress.com/2015/01/07/hiding-a-list-item-from-an-android-listview-without-removing-it-from-the-data-source/
+        //-Desc: Listview search filtering
 
 
 
-        //[uncomment to display contact list] Responsible for the listing of the contact persons
-        final ContactPersonListAdapter contactListAdapter = new ContactPersonListAdapter(this,R.layout.adapter_view_contacts,contactPersonArrayList,this);
-        contactPersonListView.setAdapter(contactListAdapter);
 
-
-        //Database retrieval of contactgroups
-        final ArrayList<ContactGroup> contactGroupArrayList = new ArrayList<>();
-        Cursor groupCursor = thesisdb.readContactGroup();
-        Cursor contactDetailCursor = thesisdb.readContactDetail();
-        for(int i = 0; groupCursor.moveToNext(); i++){
-            ArrayList<ContactPerson> groupContactPerson = new ArrayList<>();
-            String groupID = groupCursor.getString(groupCursor.getColumnIndex("contactGroup_id"));
-            String groupState = groupCursor.getString(groupCursor.getColumnIndex("state"));
-            for(int k = 0; contactDetailCursor.moveToNext(); k++){
-                String cDetGroupID = contactDetailCursor.getString(contactDetailCursor.getColumnIndex("contactGroup_id"));
-                String cDetContactID = contactDetailCursor.getString(contactDetailCursor.getColumnIndex("contact_id"));
-                if(groupID.equals(cDetGroupID)){
-                    for(int j = 0; j < contactPersonArrayList.size(); j++){
-                        String contactID = contactPersonArrayList.get(j).getContactID();
-                        if(cDetContactID.equals(contactID)){
-                            groupContactPerson.add(contactPersonArrayList.get(j));
-                        }
-                    }
-                }
-            }
-            ContactGroup contactGroup = new ContactGroup(groupCursor.getColumnName(groupCursor.getColumnIndex("name")),groupContactPerson,groupState);
-            contactGroup.setId(groupID);
-            contactGroupArrayList.add(contactGroup);
-            Log.v("Retrieved group from DB",contactGroup.getName());
-            Log.v("State check",contactGroup.getState());
-
-        }
-        //Attack contact group arraylist retrieved from database to listview
-        final ContactGroupListAdapter contactGroupListAdapter = new ContactGroupListAdapter(this,R.layout.adapter_view_contactgroups,contactGroupArrayList,this);
-        contactGroupListView.setAdapter(contactGroupListAdapter);
-
-        //Adjust listview layout to fit on the same activity
-        Utility.setListViewHeightBasedOnChildren(contactGroupListView);
-        Utility.setListViewHeightBasedOnChildren(contactPersonListView);
 
         //Add new contactgroup
-        Button btnAddGroup = (Button)findViewById(R.id.buttonAddGroup);
+        /*Button btnAddGroup = (Button)findViewById(R.id.buttonAddGroup);
         btnAddGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -173,12 +116,116 @@ public class ContactFilterGroups extends AppCompatActivity {
                 saveDialog.show();
                 //unknown log error sendUserActionEvent() returned on dialog implementation when saving
             }
-        });
+        });*/
     }
 
+    private ArrayList<ContactGroup> retrieveContactGroups(ArrayList<ContactPerson> contactPersonArrayList){
+        contactGroupArrayList = new ArrayList<>();
+
+        Cursor groupCursor = thesisdb.readContactGroup();
+        Cursor contactDetailCursor = thesisdb.readContactDetail();
+        try{
+            for(int i = 0; groupCursor.moveToNext(); i++){
+
+                ArrayList<ContactPerson> groupContactPerson = new ArrayList<>();
+                String groupID = groupCursor.getString(groupCursor.getColumnIndex("contactGroup_id"));
+                String groupState = groupCursor.getString(groupCursor.getColumnIndex("state"));
+
+                for(int k = 0; contactDetailCursor.moveToNext(); k++){
+
+                    String cDetGroupID = contactDetailCursor.getString(contactDetailCursor.getColumnIndex("contactGroup_id"));
+                    String cDetContactID = contactDetailCursor.getString(contactDetailCursor.getColumnIndex("contact_id"));
+
+                    if(groupID.equals(cDetGroupID)){
+                        for(int j = 0; j < contactPersonArrayList.size(); j++){
+                            String contactID = contactPersonArrayList.get(j).getContactID();
+                            if(cDetContactID.equals(contactID)){
+                                groupContactPerson.add(contactPersonArrayList.get(j));
+                            }
+                        }
+                    }
+                }
+                ContactGroup contactGroup = new ContactGroup(groupCursor.getColumnName(groupCursor.getColumnIndex("name")),groupContactPerson,groupState);
+                contactGroup.setId(groupID);
+                contactGroupArrayList.add(contactGroup);
+                Log.v("Retrieved group from DB",contactGroup.getName());
+                Log.v("State check",contactGroup.getState());
+
+            }
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return contactGroupArrayList;
+    }
+    private ArrayList<ContactPerson> retrieveContactPersons(){
+        contactPersonArrayList = new ArrayList<>();
+
+        Cursor cur = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+        /*---start of retrieval--*/
+        try{
+        if (cur.moveToFirst()) { // must check the result to prevent exception
+            do {
+                final String contactID = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                final String contactName = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+
+                Cursor phoneCursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,ContactsContract.CommonDataKinds.Phone.CONTACT_ID+" = ?",new String[]{contactID},null);
+
+                //Retrieve numbers of each contact
+                String[] contactNums = new String[phoneCursor.getCount()];
+                for(int i = 0;phoneCursor.moveToNext();i++){
+                    String number = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    if(number.substring(0,3).equals("+63")&&number.length()==13){
+                        number = "0"+number.substring(3,13);
+                        Log.v("substring","success");
+                    }else if(number.substring(0,3).equals("+63")&&number.length()==11){
+                        number = "0"+number.substring(3,11);
+                        Log.v("substring","success");
+
+                    }
+                    contactNums[i] = number;
+                    Log.d("contact",contactName);
+                    Log.d("number",contactNums[i]);
+                }
+                ContactPerson contactPerson = new ContactPerson(contactID,contactName,contactNums);
+                contactPersonArrayList.add(contactPerson);
+            } while (cur.moveToNext());
+        } else {
+            // empty
+        }
+
+    }catch(Exception e){
+        e.printStackTrace();
+    }
+        /*---end of retrieval---*/
+        return contactPersonArrayList;
+    }
+    public class LoadContacts extends AsyncTask<Void,Void,Void>{
+        ArrayList<ContactGroup> arrayListCG;
+        ArrayList<ContactPerson> arrayListCP;
+        @Override
+        protected Void doInBackground(Void... voids) {
+            arrayListCP = retrieveContactPersons();
+            contactPersonListAdapter = new ContactPersonListAdapter(ContactFilterGroups.this,R.layout.adapter_view_contacts,arrayListCP,ContactFilterGroups.this);
+            contactPersonListAdapter.notifyDataSetChanged();
+
+            arrayListCG = retrieveContactGroups(arrayListCP);
+            contactGroupListAdapter = new ContactGroupListAdapter(ContactFilterGroups.this,R.layout.adapter_view_contactgroups,arrayListCG,ContactFilterGroups.this);
+            contactGroupListAdapter.notifyDataSetChanged();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+                contactGroupListView.setAdapter(contactGroupListAdapter);
+                contactPersonListView.setAdapter(contactPersonListAdapter);
 
 
-
+            //Adjust listview layout to fit on the same activity
+            Utility.setListViewHeightBasedOnChildren(contactGroupListView);
+            Utility.setListViewHeightBasedOnChildren(contactPersonListView);
+        }
+    }
 
 
 

@@ -170,17 +170,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return true;
     }
-    //change state of the group
+
+
+    //change state of the group and add contacts inside the group to the blacklist
     public boolean changeGroupState(String groupID, String state){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_CONTACTGROUP_STATE,state);
         if(db.update(TABLE_CONTACTGROUPS,contentValues,COLUMN_CONTACTGROUP_ID+"= ?", new String[]{groupID})>0){
             Log.v("State change group "+groupID, state);
+            Cursor cursor = db.rawQuery("SELECT "+COLUMN_FK_CONTACT_ID+" FROM "+TABLE_CONTACT_DETAILS+" WHERE "+COLUMN_FK_CONTACTGROUP_ID+" = "+groupID,null);
+            while(cursor.moveToNext()){
+                String contactID = cursor.getString(cursor.getColumnIndex(COLUMN_FK_CONTACT_ID));
+                Log.v("Contact ID fetched:",contactID);
+            }
             return true;
         }
         return false;
     }
+
+
+
+
+
     public boolean checkIfGroupState1(String groupID){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT "+COLUMN_CONTACTGROUP_STATE+" FROM "+TABLE_CONTACTGROUPS+" WHERE "+COLUMN_CONTACTGROUP_ID+" = "+groupID+";", null);
