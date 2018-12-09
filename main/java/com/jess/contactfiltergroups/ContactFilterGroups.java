@@ -73,7 +73,7 @@ public class ContactFilterGroups extends AppCompatActivity {
 
 
         //Add new contactgroup
-        /*Button btnAddGroup = (Button)findViewById(R.id.buttonAddGroup);
+        Button btnAddGroup = (Button)findViewById(R.id.buttonAddGroup);
         btnAddGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -116,7 +116,7 @@ public class ContactFilterGroups extends AppCompatActivity {
                 saveDialog.show();
                 //unknown log error sendUserActionEvent() returned on dialog implementation when saving
             }
-        });*/
+        });
     }
 
     private ArrayList<ContactGroup> retrieveContactGroups(ArrayList<ContactPerson> contactPersonArrayList){

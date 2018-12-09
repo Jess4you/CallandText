@@ -21,7 +21,7 @@ import java.util.ArrayList;
 public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
     private static final String TAG = "ContactGroupListAdapter";
     String state = "0";
-    private Context mContext;
+    Context mContext;
     int mResource;
     ContactFilterGroups main;
     public ContactGroupListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<ContactGroup> objects, ContactFilterGroups cfg) {
@@ -55,12 +55,12 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
 
                 if(swBlock.isChecked()) {
                     state = "1";
-                    if(main.getThesisdb().changeGroupState(id,state))
-                        Log.v("On:","Success");
+                    if(main.getThesisdb().changeGroupState(id,state,main))
+                        Log.v("On:", "Success");
                 }
                 else {
                     state = "0";
-                    if(main.getThesisdb().changeGroupState(id,state))
+                    if(main.getThesisdb().changeGroupState(id,state,main))
                         Log.v("Off","Success");
                 }
             }

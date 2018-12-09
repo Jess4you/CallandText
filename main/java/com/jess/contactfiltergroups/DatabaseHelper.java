@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -66,8 +67,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ TABLE_CONTACT_DETAILS +" ("
                 +COLUMN_FK_CONTACTGROUP_ID+" INTEGER, "
                 +COLUMN_FK_CONTACT_ID+" VARCHAR, "
-                +"FOREIGN KEY("+COLUMN_FK_CONTACTGROUP_ID+") REFERENCES "+TABLE_CONTACTGROUPS+"("+COLUMN_CONTACTGROUP_ID+"), "
-                +"FOREIGN KEY("+COLUMN_FK_CONTACT_ID+") REFERENCES "+TABLE_CONTACTS+"("+COLUMN_CONTACT_ID+"));");
+                +"FOREIGN KEY("+COLUMN_FK_CONTACTGROUP_ID+") REFERENCES "+TABLE_CONTACTGROUPS+"("+COLUMN_CONTACTGROUP_ID+"));");
     }
 
     @Override
@@ -76,9 +76,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void dropTable(SQLiteDatabase db, String tablename){
+    /*public void dropTable(SQLiteDatabase db, String tablename){
 
-    }
+    }*/
 
     //Check contact if blocked by ID
     public boolean checkIfBlockedByID(String id){
@@ -92,7 +92,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return true;
     }
 
-    public boolean checkIfBlockedByName(String name){
+    /*public boolean checkIfBlockedByName(String name){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM "+TABLE_CONTACTS+" WHERE "+COLUMN_CONTACT_NAME+" = "+name+";", null);
         if(cursor.getCount() <= 0){
@@ -101,7 +101,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         return true;
-    }
+    }*/
 
     //Insert new contacts to blacklist
     public boolean insertInto(String id, String name, String[] contactnums){
@@ -173,16 +173,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     //change state of the group and add contacts inside the group to the blacklist
-    public boolean changeGroupState(String groupID, String state){
+    public boolean changeGroupState(String groupID, String state, ContactFilterGroups cfg){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
+
         contentValues.put(COLUMN_CONTACTGROUP_STATE,state);
         if(db.update(TABLE_CONTACTGROUPS,contentValues,COLUMN_CONTACTGROUP_ID+"= ?", new String[]{groupID})>0){
             Log.v("State change group "+groupID, state);
-            Cursor cursor = db.rawQuery("SELECT "+COLUMN_FK_CONTACT_ID+" FROM "+TABLE_CONTACT_DETAILS+" WHERE "+COLUMN_FK_CONTACTGROUP_ID+" = "+groupID,null);
-            while(cursor.moveToNext()){
-                String contactID = cursor.getString(cursor.getColumnIndex(COLUMN_FK_CONTACT_ID));
-                Log.v("Contact ID fetched:",contactID);
+            Cursor detailCursor = db.rawQuery("SELECT "+COLUMN_FK_CONTACT_ID+" FROM "+TABLE_CONTACT_DETAILS+" WHERE "+COLUMN_FK_CONTACTGROUP_ID+" = "+groupID,null);
+            while(detailCursor.moveToNext()){
+                String blockedID = detailCursor.getString(detailCursor.getColumnIndex(COLUMN_FK_CONTACT_ID));
+                Log.v("Contact ID fetched:",blockedID);
+                Cursor contactCursor = cfg.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+                while(contactCursor.moveToNext()){
+                    String contactID = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
+                    if(blockedID.equalsIgnoreCase(contactID)) {
+                        String contactName = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                        Cursor phoneCursor = cfg.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,ContactsContract.CommonDataKinds.Phone.CONTACT_ID+" = ?",new String[]{contactID},null);
+
+                        //Retrieve numbers of each contact
+                        String[] contactNums = new String[phoneCursor.getCount()];
+                        for(int i = 0;phoneCursor.moveToNext();i++){
+                            String number = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                            if(number.substring(0,3).equals("+63")&&number.length()==13){
+                                number = "0"+number.substring(3,13);
+                                Log.v("substring","success");
+                            }else if(number.substring(0,3).equals("+63")&&number.length()==11){
+                                number = "0"+number.substring(3,11);
+                                Log.v("substring","success");
+
+                            }
+                            contactNums[i] = number;
+                            Log.d("contact",contactName);
+                            Log.d("number",contactNums[i]);
+                            if(state.equalsIgnoreCase("1"))
+                                insertInto(contactID,contactName,contactNums);
+                            else
+                                removeBlocked(blockedID);
+                        }
+                    }
+                }
             }
             return true;
         }
