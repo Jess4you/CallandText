@@ -8,29 +8,22 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="50"
-        android:weightSum="60">
+        android:layout_weight="50">
 
         <TextView
-            android:id="@+id/textViewNameGroups"
+            android:id="@+id/textViewName"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
+            android:layout_height="60dp"
             android:text="SampleText"
             android:textAlignment="center"
-            android:gravity="center"
-            android:layout_weight="30"/>
-        <TextView
-            android:id="@+id/textViewIDGroups"
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:text="SampleText"
-            android:gravity="center"
-            android:layout_weight="30"/>
+            android:gravity="center"/>
     </LinearLayout>
+
     <Switch
-        android:id="@+id/switchFilterGroups"
+        android:id="@+id/switchFilter"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:paddingRight="20dp"
         android:layout_weight="50"/>
+
 </LinearLayout>
