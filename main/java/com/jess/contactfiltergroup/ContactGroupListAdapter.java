@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -62,6 +63,7 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
                     if(thesisDB.changeGroupState(id,state,mContext))
                         Log.v("Off","Success");
                 }
+                Log.v("Switch State", "Change state to "+state);
             }
         });
         if(active){

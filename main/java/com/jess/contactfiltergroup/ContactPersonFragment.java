@@ -49,7 +49,7 @@ public class ContactPersonFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_contacts,container,false);
         contactPersonListView = (ListView)view.findViewById(R.id.contactPersonListView);
         thesisDB = new DatabaseHelper(mContext);
-            new LoadContacts().execute();
+        new LoadContacts().execute();
         Button btnAddGroup = (Button)view.findViewById(R.id.buttonAddGroup);
         btnAddGroup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,9 +72,14 @@ public class ContactPersonFragment extends Fragment {
                             }
                             String grpName = groupName.getText().toString();
                             ContactGroup contactGroup = new ContactGroup(grpName, newGroup,"1");
-                            ContactFilter.getContactGroupArrayList().add(contactGroup);
-                            ContactFilter.getThesisDB().insertNewGroup(contactGroup.getName(),contactGroup.getContactPersonArrayList());
-                            ContactFilter.getContactGroupArrayAdapter().notifyDataSetChanged();
+                            int rowID = ContactFilter.getThesisDB().insertNewGroup(contactGroup.getName(),contactGroup.getContactPersonArrayList());
+
+                            //Updating grouplist
+                            contactGroup.setId(String.valueOf(rowID));
+                            ArrayList<ContactGroup> CGA = ContactGroupFragment.getContactGroupArrayList();
+                            CGA.add(contactGroup);
+                            ContactGroupFragment.setContactGroupArrayList(CGA);
+
                             Toast.makeText(getActivity(),"Group "+grpName+" added!",Toast.LENGTH_SHORT).show();
                         }else{
                             Toast.makeText(getActivity(),"Please input a name!",Toast.LENGTH_SHORT).show();
@@ -156,6 +161,7 @@ public class ContactPersonFragment extends Fragment {
             contactPersonListView.setAdapter(contactPersonListAdapter);
             //Adjust listview layout to fit on the same activity
             ContactFilter.setContactPersonArrayAdapter(contactPersonListAdapter);
+            Utility.setListViewHeightBasedOnChildren(contactPersonListView);
         }
     }
 }

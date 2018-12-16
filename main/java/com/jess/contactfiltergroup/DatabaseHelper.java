@@ -144,7 +144,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     //insert new contact group
-    public boolean insertNewGroup(String name, ArrayList<ContactPerson> contactPersonArrayList){
+    public int insertNewGroup(String name, ArrayList<ContactPerson> contactPersonArrayList){
         long breaker;
         int lastColumnInsert;
         Log.v("Group name",name);
@@ -154,7 +154,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         contentValues.put(COLUMN_CONTACTGROUP_STATE,"0");
         breaker = db.insert(TABLE_CONTACTGROUPS,null,contentValues);
         if(breaker == -1)
-            return false;
+            return 0;
         else
             lastColumnInsert = (int)breaker;
         contentValues.clear();
@@ -164,11 +164,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             contentValues.put(COLUMN_FK_CONTACTGROUP_ID,lastColumnInsert);
             breaker = db.insert(TABLE_CONTACT_DETAILS,null,contentValues);
             if(breaker == -1)
-                return false;
+                return 0;
             Log.v("Grouped ["+i+"]",contactPersonArrayList.get(i).getContactName());
             contentValues.clear();
         }
-        return true;
+        return lastColumnInsert;
     }
 
 
@@ -176,7 +176,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public boolean changeGroupState(String groupID, String state, Context cf){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
-
+        Log.v("Changing state","Start");
+        Log.v("Passing parameters","ID = "+groupID+", State = "+state);
         contentValues.put(COLUMN_CONTACTGROUP_STATE,state);
         if(db.update(TABLE_CONTACTGROUPS,contentValues,COLUMN_CONTACTGROUP_ID+"= ?", new String[]{groupID})>0){
             Log.v("State change group "+groupID, state);
@@ -219,6 +220,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
             return true;
         }
+        Log.v("State change","Fail");
         return false;
     }
 

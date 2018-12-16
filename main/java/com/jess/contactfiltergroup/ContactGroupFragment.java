@@ -23,17 +23,15 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
     private static final String TAG = "ContactGroupFragment";
     private static final String CONTACTFILTER_KEY = "ContactFilter_key";
 
-    private ListView contactGroupListView;
+    public static ListView contactGroupListView;
 
-    private ContactFilter mContactFilter;
+    private final Context mContext;
 
-    private Context mContext;
+    private final DatabaseHelper thesisDB;
 
-    private DatabaseHelper thesisDB;
-
-    public ArrayList<ContactPerson> arrayListCP;
-    public ArrayList<ContactGroup> contactGroupArrayList;
-    public ArrayAdapter<ContactGroup> contactGroupListAdapter;
+    private ArrayList<ContactPerson> arrayListCP;
+    public static ArrayList<ContactGroup> contactGroupArrayList;
+    private ArrayAdapter<ContactGroup> contactGroupListAdapter;
 
 
     //CONSTRUCTOR
@@ -49,7 +47,7 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contactgroups,container,false);
-        contactGroupListView = (ListView)view.findViewById(R.id.contactGroupListView);
+        contactGroupListView = view.findViewById(R.id.contactGroupListView);
         new LoadContacts().execute();
         return view;
     }
@@ -57,14 +55,21 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
     public void setArrayListCP(ArrayList<ContactPerson> contactPersonArrayList){
         this.arrayListCP = contactPersonArrayList;
     }
-    public void setContactGroupArrayList(ArrayList<ContactGroup> contactGroupArrayList){
-        this.contactGroupArrayList = contactGroupArrayList;
+
+
+    public static void setContactGroupArrayList(ArrayList<ContactGroup> contactGroupArrayList){
+        ContactGroupFragment.contactGroupArrayList = contactGroupArrayList;
     }
-    public ArrayList<ContactGroup> getContactGroupArrayList(){
+    public static ArrayList<ContactGroup> getContactGroupArrayList(){
         return contactGroupArrayList;
     }
-    public ArrayAdapter<ContactGroup> getContactGroupListAdapter(){
-        return contactGroupListAdapter;
+    public static void setContactGroupListView(ListView contactGroupListView){
+        ContactGroupFragment.contactGroupListView = contactGroupListView;
+    }
+    public static ListView getContactGroupListView(){
+        return contactGroupListView;
+    }
+    public static void resetContactGroupListViewHeight(){
     }
 
     private ArrayList<ContactGroup> retrieveContactGroups(ArrayList<ContactPerson> contactPersonArrayList){
@@ -120,7 +125,6 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
             arrayListCG = retrieveContactGroups(arrayListCP);
             contactGroupListAdapter = new ContactGroupListAdapter(getActivity(), R.layout.adapter_view_contactgroups, arrayListCG);
             contactGroupListAdapter.notifyDataSetChanged();
-            Log.v("Load Groups","Loadding");
             return null;
         }
 
@@ -129,6 +133,9 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
             contactGroupListView.setAdapter(contactGroupListAdapter);
             //Adjust listview layout to fit on the same activity
             ContactFilter.setContactGroupArrayAdapter(contactGroupListAdapter);
+            Utility.setListViewHeightBasedOnChildren(contactGroupListView);
         }
     }
+
+
 }

@@ -37,7 +37,7 @@ public class ContactFilter extends AppCompatActivity{
     private static final String TAG = "ContactFilter";
 
     private int MY_PERMISSIONS_REQUEST_SMS_RECEIVE = 10;
-
+    private int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     public static Context appContext;
 
     private SectionsPageAdapter mSectionsPageAdapter;
@@ -67,6 +67,9 @@ public class ContactFilter extends AppCompatActivity{
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.RECEIVE_SMS},
                 MY_PERMISSIONS_REQUEST_SMS_RECEIVE);
+        ActivityCompat.requestPermissions(this
+                ,new String[]{Manifest.permission.READ_CONTACTS}
+                ,MY_PERMISSIONS_REQUEST_READ_CONTACTS);
 
         //IMPORTANT -- set application context
         this.appContext = getApplicationContext();
@@ -74,6 +77,7 @@ public class ContactFilter extends AppCompatActivity{
         thesisDB = new DatabaseHelper(this);
         mSectionsPageAdapter = new SectionsPageAdapter(getSupportFragmentManager());
 
+        //this.deleteDatabase("thesis.db");
         //Setting up the ViewPager with the SectionsAdapter
         mViewPager = (ViewPager)findViewById(R.id.container);
         mViewPager.setOffscreenPageLimit(1);
@@ -102,7 +106,6 @@ public class ContactFilter extends AppCompatActivity{
 
         ContactGroupFragment contactGroupFragment = new ContactGroupFragment();
         contactGroupFragment.setArrayListCP(contactPersonArrayList);
-        setContactGroupArrayList(contactGroupFragment.getContactGroupArrayList());
         adapter.addFragment(contactGroupFragment,"Contact Groups");
         viewPager.setAdapter(adapter);
     }
@@ -149,9 +152,14 @@ public class ContactFilter extends AppCompatActivity{
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == MY_PERMISSIONS_REQUEST_SMS_RECEIVE) {
-            // YES!!
-            Log.i("TAG", "MY_PERMISSIONS_REQUEST_SMS_RECEIVE --> YES");
+            // YES
+            Log.i(TAG, "MY_PERMISSIONS_REQUEST_SMS_RECEIVE --> YES");
+        }
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_CONTACTS) {
+            // YES
+            Log.i(TAG, "MY_PERMISSIONS_REQUEST_READ_CONTACTS --> YES");
         }
     }
+
 
 }
