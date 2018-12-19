@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Telephony;
 import android.support.annotation.NonNull;
@@ -18,6 +19,8 @@ import android.widget.Button;
 
 public class MainMenu extends AppCompatActivity {
     private static final String TAG = "MainMenu";
+    private int PERMISSION_REQUEST_READ_PHONE_STATE = 100;
+    private int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 100;
     private int MY_PERMISSIONS_REQUEST_SMS_RECEIVE = 10;
     private int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     public static final String CHANNEL_1_ID = "channel1";
@@ -37,6 +40,16 @@ public class MainMenu extends AppCompatActivity {
         ActivityCompat.requestPermissions(this
                 ,new String[]{Manifest.permission.READ_CONTACTS}
                 ,MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+        ActivityCompat.requestPermissions(this
+                ,new String[]{Manifest.permission.READ_PHONE_STATE}
+                ,MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            if(checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED
+                    || checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_DENIED){
+                String[] permissions = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE};
+                requestPermissions(permissions, PERMISSION_REQUEST_READ_PHONE_STATE);
+            }
+        }
 
         btnAppLock = (Button)findViewById(R.id.btnAppLock);
         btnFilter = (Button)findViewById(R.id.btnFilter);
@@ -102,6 +115,11 @@ public class MainMenu extends AppCompatActivity {
         if (requestCode == MY_PERMISSIONS_REQUEST_READ_CONTACTS) {
             // YES
             Log.i(TAG, "MY_PERMISSIONS_REQUEST_READ_CONTACTS --> YES");
+        }
+        if (requestCode == MY_PERMISSIONS_REQUEST_READ_PHONE_STATE){
+            // YES
+            Log.i(TAG, "PERMISSION_REQUEST_READ_PHONE_STATE --> YES");
+
         }
     }
 }

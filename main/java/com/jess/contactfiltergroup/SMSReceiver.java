@@ -61,7 +61,7 @@ public class SMSReceiver extends BroadcastReceiver {
                 if(contactNumCursor.getString(contactNumCursor.getColumnIndex("number")).equalsIgnoreCase(messageAddress)) {
                     Log.v("test", "successs");
 
-                    Toast.makeText(context,"BLOCKED",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context,"Blocked message from: "+messageAddress,Toast.LENGTH_SHORT).show();
                     abortBroadcast();
                     blockMessage = true;
                     Log.v("Abortbroadcast", "success");
