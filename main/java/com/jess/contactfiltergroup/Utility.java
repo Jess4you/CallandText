@@ -1,5 +1,6 @@
 package com.jess.contactfiltergroup;
 
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
@@ -16,6 +17,7 @@ import android.widget.ListView;
     //Also for adjusting height based on children
 
 public class Utility {
+    private static final String TAG = "Util";
     public static void setListViewHeightBasedOnChildren(ListView listView) {
         ListAdapter listAdapter = listView.getAdapter();
         if (listAdapter == null) {
@@ -24,13 +26,13 @@ public class Utility {
         }
         int totalHeight = 0;
         int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.AT_MOST);
+        Log.v(TAG,"Setting up ListView height based on "+listAdapter.getCount()+" children");
         for(int i = 0; i < listAdapter.getCount(); i++){
             View listItem = listAdapter.getView(i, null,listView);
             listItem.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
             totalHeight += listItem.getMeasuredHeight();
         }
 
-        totalHeight++;
 
         ViewGroup.LayoutParams params = listView.getLayoutParams();
         params.height = totalHeight + (listView.getDividerHeight()*(listAdapter.getCount() - 1));

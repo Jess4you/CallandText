@@ -32,7 +32,7 @@ public class ContactPersonFragment extends Fragment {
     private Context mContext;
     DatabaseHelper thesisDB;
 
-    public ArrayList<ContactPerson> contactPersonArrayList;
+    public static ArrayList<ContactPerson> contactPersonArrayList;
     public ArrayAdapter<ContactPerson> contactPersonListAdapter;
 
     //CONSTRUCTOR
@@ -43,14 +43,26 @@ public class ContactPersonFragment extends Fragment {
         this.contactPersonArrayList = retrieveContactPersons();
     }
 
+    //INTER-CLASS ARRAY COMMUNICATION
+    public static void setContactPersonArrayList(ArrayList<ContactPerson> contactPersonArrayList){
+        ContactPersonFragment.contactPersonArrayList = contactPersonArrayList;
+    }
+    public static ArrayList<ContactPerson> getContactPersonArrayList(){
+        return contactPersonArrayList;
+    }
+
     @Nullable
-    @Override
+    @Override//INFLATER
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contacts,container,false);
-        contactPersonListView = (ListView)view.findViewById(R.id.contactPersonListView);
-        thesisDB = new DatabaseHelper(mContext);
-        new LoadContacts().execute();
+        contactPersonListView = view.findViewById(R.id.contactPersonListView);
         Button btnAddGroup = (Button)view.findViewById(R.id.buttonAddGroup);
+        thesisDB = new DatabaseHelper(mContext);
+
+        //Start background thread
+        new LoadContacts().execute();
+
+        //Adding of new contact group
         btnAddGroup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,7 +84,7 @@ public class ContactPersonFragment extends Fragment {
                             }
                             String grpName = groupName.getText().toString();
                             ContactGroup contactGroup = new ContactGroup(grpName, newGroup,"1");
-                            int rowID = ContactFilter.getThesisDB().insertNewGroup(contactGroup.getName(),contactGroup.getContactPersonArrayList());
+                            int rowID = ContactFilter.getThesisDB().insertNewContactGroup(contactGroup.getName(),contactGroup.getContactPersonArrayList());
 
                             //Updating grouplist
                             contactGroup.setId(String.valueOf(rowID));
@@ -96,10 +108,16 @@ public class ContactPersonFragment extends Fragment {
                 //unknown log error sendUserActionEvent() returned on dialog implementation when saving
             }
         });
-
+        //--end of group adding
         return view;
     }
 
+
+
+
+
+
+    //BACKGROUND RETRIEVAL METHOD
     private ArrayList<ContactPerson> retrieveContactPersons(){
         ArrayList<ContactPerson> arrayListCP = new ArrayList<>();
 
@@ -138,30 +156,28 @@ public class ContactPersonFragment extends Fragment {
         /*---end of retrieval---*/
         return arrayListCP;
     }
-
-    public void setContactPersonArraylist(ArrayList<ContactPerson> contactPersonArraylist){
-        this.contactPersonArrayList = contactPersonArraylist;
-    }
-    public ArrayList<ContactPerson> getContactPersonArrayList(){
-        return contactPersonArrayList;
-    }
-
     public class LoadContacts extends AsyncTask<Void,Void,Void> {
         ArrayList<ContactPerson> arrayListCP;
+
         @Override
         protected Void doInBackground(Void... voids) {
+
             arrayListCP = retrieveContactPersons();
             contactPersonListAdapter = new ContactPersonListAdapter(getActivity(), R.layout.adapter_view_contacts, arrayListCP);
             contactPersonListAdapter.notifyDataSetChanged();
             return null;
+
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
+
             contactPersonListView.setAdapter(contactPersonListAdapter);
             //Adjust listview layout to fit on the same activity
             ContactFilter.setContactPersonArrayAdapter(contactPersonListAdapter);
             Utility.setListViewHeightBasedOnChildren(contactPersonListView);
+
         }
     }
+    //END OF BACKGROUND RETRIEVAL
 }

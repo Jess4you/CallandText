@@ -36,8 +36,6 @@ public class ContactFilter extends AppCompatActivity{
 
     private static final String TAG = "ContactFilter";
 
-    private int MY_PERMISSIONS_REQUEST_SMS_RECEIVE = 10;
-    private int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     public static Context appContext;
 
     private SectionsPageAdapter mSectionsPageAdapter;
@@ -53,6 +51,7 @@ public class ContactFilter extends AppCompatActivity{
     public static ArrayAdapter<ContactGroup> contactGroupArrayAdapter;
 
     public static ArrayAdapter<ContactPerson> contactPersonArrayAdapter;
+
     public static ContactFilter mContext;
 
     //IMPORTANT -- retrieve static appContext
@@ -64,12 +63,6 @@ public class ContactFilter extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_filter);
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.RECEIVE_SMS},
-                MY_PERMISSIONS_REQUEST_SMS_RECEIVE);
-        ActivityCompat.requestPermissions(this
-                ,new String[]{Manifest.permission.READ_CONTACTS}
-                ,MY_PERMISSIONS_REQUEST_READ_CONTACTS);
 
         //IMPORTANT -- set application context
         this.appContext = getApplicationContext();
@@ -88,12 +81,10 @@ public class ContactFilter extends AppCompatActivity{
         //--- End of ViewPager Set up
     }
 
-
     //Retrieve the helper
     public static DatabaseHelper getThesisDB(){
         return thesisDB;
     }
-
 
     // Setting up the Fragment Tabs
     private void setupViewPager(ViewPager viewPager){
@@ -143,23 +134,6 @@ public class ContactFilter extends AppCompatActivity{
 
 
 
-
-
-
-
-    //Permissions: sms receive request
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == MY_PERMISSIONS_REQUEST_SMS_RECEIVE) {
-            // YES
-            Log.i(TAG, "MY_PERMISSIONS_REQUEST_SMS_RECEIVE --> YES");
-        }
-        if (requestCode == MY_PERMISSIONS_REQUEST_READ_CONTACTS) {
-            // YES
-            Log.i(TAG, "MY_PERMISSIONS_REQUEST_READ_CONTACTS --> YES");
-        }
-    }
 
 
 }

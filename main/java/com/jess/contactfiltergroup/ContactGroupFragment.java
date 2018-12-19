@@ -21,18 +21,17 @@ import java.util.ArrayList;
 
 public class ContactGroupFragment extends android.support.v4.app.Fragment {
     private static final String TAG = "ContactGroupFragment";
-    private static final String CONTACTFILTER_KEY = "ContactFilter_key";
-
-    public static ListView contactGroupListView;
 
     private final Context mContext;
 
     private final DatabaseHelper thesisDB;
 
     private ArrayList<ContactPerson> arrayListCP;
-    public static ArrayList<ContactGroup> contactGroupArrayList;
     private ArrayAdapter<ContactGroup> contactGroupListAdapter;
 
+    public static ArrayList<ContactGroup> contactGroupArrayList;
+
+    public ListView contactGroupListView;
 
     //CONSTRUCTOR
     public ContactGroupFragment(){
@@ -40,11 +39,12 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
         if(mContext==null)
             Log.v("Fragment Context","NULL");
         this.thesisDB = new DatabaseHelper(ContactFilter.getAppContext());
-        this.contactGroupArrayList = retrieveContactGroups(ContactFilter.getContactPersonArrayList());
+        this.contactGroupArrayList = retrieveContactGroups(ContactPersonFragment.getContactPersonArrayList());
     }
 
+
     @Nullable
-    @Override
+    @Override//INFLATER
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_contactgroups,container,false);
         contactGroupListView = view.findViewById(R.id.contactGroupListView);
@@ -52,26 +52,21 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
         return view;
     }
 
+    //INTER-CLASS ARRAY COMMUNICATION
     public void setArrayListCP(ArrayList<ContactPerson> contactPersonArrayList){
         this.arrayListCP = contactPersonArrayList;
     }
-
-
     public static void setContactGroupArrayList(ArrayList<ContactGroup> contactGroupArrayList){
         ContactGroupFragment.contactGroupArrayList = contactGroupArrayList;
+        for(int i = 0;i<ContactGroupFragment.contactGroupArrayList.size();i++){
+            Log.v(TAG,"Check arraylist content: "+contactGroupArrayList.get(i).getName());
+        }
     }
     public static ArrayList<ContactGroup> getContactGroupArrayList(){
         return contactGroupArrayList;
     }
-    public static void setContactGroupListView(ListView contactGroupListView){
-        ContactGroupFragment.contactGroupListView = contactGroupListView;
-    }
-    public static ListView getContactGroupListView(){
-        return contactGroupListView;
-    }
-    public static void resetContactGroupListViewHeight(){
-    }
 
+    //BACKGROUND RETRIEVAL METHOD
     private ArrayList<ContactGroup> retrieveContactGroups(ArrayList<ContactPerson> contactPersonArrayList){
         contactGroupArrayList = new ArrayList<>();
         Cursor groupCursor = thesisDB.readContactGroup();
@@ -126,16 +121,16 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
             contactGroupListAdapter = new ContactGroupListAdapter(getActivity(), R.layout.adapter_view_contactgroups, arrayListCG);
             contactGroupListAdapter.notifyDataSetChanged();
             return null;
+
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             contactGroupListView.setAdapter(contactGroupListAdapter);
-            //Adjust listview layout to fit on the same activity
             ContactFilter.setContactGroupArrayAdapter(contactGroupListAdapter);
-            Utility.setListViewHeightBasedOnChildren(contactGroupListView);
+            //Adjust listview layout to fit on the screen
+
         }
     }
-
-
+    //--END OF BACKGROUND RETRIEVAL
 }
