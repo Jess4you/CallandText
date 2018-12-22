@@ -1,4 +1,4 @@
-package com.jess.contactfiltergroups;
+package com.jess.contactfiltergroup;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -9,26 +9,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 
 /**
- * Created by USER on 11/26/2018.
+ * Created by USER on 12/9/2018.
  */
 
 public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
     private static final String TAG = "ContactGroupListAdapter";
+
+    private DatabaseHelper thesisDB;
     String state = "0";
     Context mContext;
     int mResource;
-    ContactFilterGroups main;
-    public ContactGroupListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<ContactGroup> objects, ContactFilterGroups cfg) {
+    public ContactGroupListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<ContactGroup> objects) {
         super(context, resource, objects);
         this.mContext = context;
         this.mResource = resource;
-        this.main = cfg;
+        thesisDB = new DatabaseHelper(context);
     }
 
     @NonNull
@@ -38,15 +40,13 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
         final String id = getItem(position).getId();
         final String name = getItem(position).getName();
         final ArrayList<ContactPerson> contactPersonArrayList = getItem(position).getContactPersonArrayList();
-        Log.v("Group:","Success");
+        Log.v("Group:",name);
         LayoutInflater layoutInflater = LayoutInflater.from(mContext);
         convertView = layoutInflater.inflate(mResource,parent,false);
 
-        TextView tvID = (TextView)convertView.findViewById(R.id.textViewIDGroups);
-        TextView tvName = (TextView)convertView.findViewById(R.id.textViewNameGroups);
-        final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilterGroups);
-
-        boolean active = main.getThesisdb().checkIfGroupState1(id);
+        TextView tvName = (TextView)convertView.findViewById(R.id.textViewName);
+        final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilter);
+        boolean active = thesisDB.checkIfContactGroupState1(id);
         swBlock.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
             @Override
@@ -55,14 +55,15 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
 
                 if(swBlock.isChecked()) {
                     state = "1";
-                    if(main.getThesisdb().changeGroupState(id,state,main))
+                    if(thesisDB.changeContactGroupState(id,state,mContext))
                         Log.v("On:", "Success");
                 }
                 else {
                     state = "0";
-                    if(main.getThesisdb().changeGroupState(id,state,main))
+                    if(thesisDB.changeContactGroupState(id,state,mContext))
                         Log.v("Off","Success");
                 }
+                Log.v("Switch State", "Change state to "+state);
             }
         });
         if(active){

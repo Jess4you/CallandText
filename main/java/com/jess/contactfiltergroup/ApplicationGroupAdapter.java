@@ -1,4 +1,4 @@
-package com.jess.contactfiltergroups;
+package com.jess.contactfiltergroup;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -15,20 +15,23 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 /**
- * Created by USER on 11/26/2018.
+ * Created by USER on 12/17/2018.
  */
 
-public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
-    private static final String TAG = "ContactGroupListAdapter";
-    String state = "0";
-    Context mContext;
+public class ApplicationGroupAdapter extends ArrayAdapter<ApplicationGroup> {
+    private static final String TAG = "ApplicationGroupAdapter";
+
+    private Context mContext;
+
     int mResource;
-    ContactFilterGroups main;
-    public ContactGroupListAdapter(@NonNull Context context, int resource, @NonNull ArrayList<ContactGroup> objects, ContactFilterGroups cfg) {
+    private String state;
+    DatabaseHelper thesisDB;
+
+    public ApplicationGroupAdapter(@NonNull Context context, int resource, @NonNull ArrayList<ApplicationGroup> objects) {
         super(context, resource, objects);
         this.mContext = context;
         this.mResource = resource;
-        this.main = cfg;
+        thesisDB = new DatabaseHelper(context);
     }
 
     @NonNull
@@ -37,16 +40,14 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
         //getting the contact informationposition
         final String id = getItem(position).getId();
         final String name = getItem(position).getName();
-        final ArrayList<ContactPerson> contactPersonArrayList = getItem(position).getContactPersonArrayList();
-        Log.v("Group:","Success");
+        final ArrayList<ApplicationObj> applicationObjArrayList = getItem(position).getApplicationObjArrayList();
+        Log.v("Group:",name);
         LayoutInflater layoutInflater = LayoutInflater.from(mContext);
         convertView = layoutInflater.inflate(mResource,parent,false);
 
-        TextView tvID = (TextView)convertView.findViewById(R.id.textViewIDGroups);
-        TextView tvName = (TextView)convertView.findViewById(R.id.textViewNameGroups);
-        final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilterGroups);
-
-        boolean active = main.getThesisdb().checkIfGroupState1(id);
+        TextView tvName = (TextView)convertView.findViewById(R.id.textViewName);
+        final Switch swBlock = (Switch)convertView.findViewById(R.id.switchFilter);
+        boolean active = thesisDB.checkIfAppGroupState1(id);
         swBlock.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
             @Override
@@ -55,14 +56,15 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
 
                 if(swBlock.isChecked()) {
                     state = "1";
-                    if(main.getThesisdb().changeGroupState(id,state,main))
+                    if(thesisDB.changeAppGroupState(id,state,mContext))
                         Log.v("On:", "Success");
                 }
                 else {
                     state = "0";
-                    if(main.getThesisdb().changeGroupState(id,state,main))
+                    if(thesisDB.changeAppGroupState(id,state,mContext))
                         Log.v("Off","Success");
                 }
+                Log.v("Switch State", "Change state to "+state);
             }
         });
         if(active){
@@ -70,8 +72,6 @@ public class ContactGroupListAdapter extends ArrayAdapter<ContactGroup> {
         }else{
             swBlock.setChecked(false);
         }
-        //transfer the person object with the information
-        final ContactGroup contactGroup = new ContactGroup(name,contactPersonArrayList,state);
         tvName.setText(name);
         return convertView;
     }
