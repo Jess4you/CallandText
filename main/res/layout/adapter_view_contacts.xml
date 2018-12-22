@@ -18,10 +18,12 @@
             android:textAlignment="center"
             android:gravity="center"/>
     </LinearLayout>
+
     <Switch
         android:id="@+id/switchFilter"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:paddingRight="20dp"
         android:layout_weight="50"/>
+
 </LinearLayout>
