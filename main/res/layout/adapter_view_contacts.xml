@@ -24,6 +24,19 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:paddingRight="20dp"
-        android:layout_weight="50"/>
+        android:layout_weight="50"
+        android:visibility="gone"/>
+    <CheckBox
+        android:id="@+id/textFilter"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_weight="60"
+        android:text="text"/>
+    <CheckBox
+        android:id="@+id/callFilter"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_weight="60"
+        android:text="call"/>
 
 </LinearLayout>

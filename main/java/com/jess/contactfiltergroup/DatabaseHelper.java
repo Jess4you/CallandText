@@ -24,6 +24,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_CONTACTS = "contact";
     public static final String COLUMN_CONTACT_ID = "contact_id";
     public static final String COLUMN_CONTACT_NAME = "name";
+    public static final String COLUMN_CONTACT_STATE = "state";
 
     //table for contact numbers
     public static final String TABLE_CONTACTNUMS = "contactNum";
@@ -83,6 +84,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_QUESTION_TWO = "secondQuestion";
     public static final String COLUMN_QUESTIONTWO_ANSWER = "secondAnswer";
 
+    //-----------------SMS database----------------
+
+    //table for all messages received
+    public static final String TABLE_SMS_INBOX = "smsInbox";
+    public static final String COLUMN_MSG_ID = "msgID";
+    public static final String COLUMN_MSG_RECIPIENT = "msgRecipient";
+
+
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
     }
@@ -107,7 +117,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         //CONTACT TABLES
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ TABLE_CONTACTS +" ("
                 +COLUMN_CONTACT_ID+" VARCHAR PRIMARY KEY, "
-                +COLUMN_CONTACT_NAME+" VARCHAR);");
+                +COLUMN_CONTACT_NAME+" VARCHAR, "
+                +COLUMN_CONTACT_STATE+" VARCHAR);");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ TABLE_CONTACTNUMS +" ("
                 +COLUMN_CONTACTNUM_ID+" INTEGER PRIMARY KEY AUTOINCREMENT, "
                 +COLUMN_CONTACTNUM_NUMBER+" VARCHAR);");
@@ -268,9 +279,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }
         }
         return false;
-
     }
-
     public boolean changeAppState(String app){
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -305,13 +314,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }*/
 
     //Insert new contacts to blacklist
-    public boolean insertInto(String id, String name, String[] contactnums){
+    public boolean insertIntoBlocked(String id, String name, String[] contactnums, String state){
         long breaker;
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_CONTACT_ID,id);
         contentValues.put(COLUMN_CONTACT_NAME,name);
+        contentValues.put(COLUMN_CONTACT_STATE,state);
         breaker = db.insert(TABLE_CONTACTS,null,contentValues);
+
         if(breaker == -1)
             return false;
         contentValues.clear();
@@ -330,7 +341,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         return true;
     }
+    public String checkContactState(String id){
+        SQLiteDatabase db = this.getWritableDatabase();
+        Log.v(TAG,"checkContactState of ID = "+id);
+        Cursor cursor = db.rawQuery("SELECT "+COLUMN_CONTACT_STATE+" FROM "+TABLE_CONTACTS+" WHERE "+COLUMN_CONTACT_ID+" = "+id+";", null);
+        while (cursor.moveToNext()){
+            String state = cursor.getString(cursor.getColumnIndex(COLUMN_CONTACTGROUP_STATE));
+            Log.v(TAG,"checkContactState: "+state);
+            return state;
+        }
+        cursor.close();
+        return "0";
+    }
+    public void changeContactState(String id, String state){
 
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        Log.v("Changing Contact state","Start");
+        Log.v("Passing parameters","ID = "+id+", State = "+state);
+        contentValues.put(COLUMN_CONTACT_STATE,state);
+        if(db.update(TABLE_CONTACTS,contentValues,COLUMN_CONTACT_ID+"= ?", new String[]{id})>0)
+            Log.v(TAG, "Change Contact State to "+state+": Success");
+    }
     //remove blocked numbers from contacts
     public boolean removeBlocked(String id){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -410,7 +442,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             Log.d("number",contactNums[i]);
 
                             if(state.equalsIgnoreCase("1")) {
-                                insertInto(contactID, contactName, contactNums);
+                                insertIntoBlocked(contactID, contactName, contactNums, "1");
                                 ContactFilter.getContactPersonArrayAdapter().notifyDataSetChanged();
                                 /*ArrayList<ContactPerson> CPA = ContactPersonFragment.getContactPersonArrayList();
                                 ContactPersonFragment.setContactPersonArrayList(CPA);*/
@@ -472,4 +504,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     //TODO: Add configuration lines here
+
+
+    //TODO: Add SMS configuration here
+
+    public boolean receiveToInbox(String recipient, String body){
+        return false;
+    }
 }

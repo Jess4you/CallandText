@@ -59,7 +59,8 @@ public class CallReceiver extends BroadcastReceiver {
                     telephonyObject = serviceMethod.invoke(null, retbinder);
                     if(contactNumCursor.moveToFirst()){
                         do{
-                            if(contactNumCursor.getString(contactNumCursor.getColumnIndex("number")).equalsIgnoreCase(number)) {
+                            String dbNumber = contactNumCursor.getString(contactNumCursor.getColumnIndex("number"));
+                            if(dbNumber.equalsIgnoreCase(number) ) {
 
                                 Toast.makeText(context,"Blocked call from: "+number,Toast.LENGTH_SHORT).show();
                                 telephonyEndCall = telephonyClass.getMethod("endCall");
