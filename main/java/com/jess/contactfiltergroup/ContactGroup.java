@@ -9,10 +9,11 @@ import java.util.ArrayList;
 public class ContactGroup {
 
     ArrayList<ContactPerson> contactPersonArrayList;
-    String id;
+    int id;
     String name;
     String state = "0";
-    public ContactGroup(String name,ArrayList<ContactPerson> CPA,String state) {
+    public ContactGroup(int id, String name,ArrayList<ContactPerson> CPA,String state) {
+        this.id = id;
         this.name = name;
         this.contactPersonArrayList = CPA;
         this.state = state;
@@ -26,11 +27,11 @@ public class ContactGroup {
         this.contactPersonArrayList = contactPersonArrayList;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 

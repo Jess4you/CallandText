@@ -40,8 +40,8 @@ public class SMSReceiver extends BroadcastReceiver {
                 messages = SmsMessage.createFromPdu((byte[]) pdus[0]);
 
                 String messageAddress = messages.getOriginatingAddress();
-                //Start Application's MainActivity activity
 
+                //Start Application's MainActivity activity
                 SQLiteDatabase db = context.openOrCreateDatabase("thesis.db", 0, null);
                 DatabaseHelper thesisDB = new DatabaseHelper(context);
                 Cursor contactCursor = db.rawQuery("SELECT * From contact", null);

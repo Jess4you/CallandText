@@ -51,7 +51,6 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
         final CheckBox cbText = (CheckBox) convertView.findViewById(R.id.textFilter);
         final CheckBox cbCall = (CheckBox) convertView.findViewById(R.id.callFilter);
         tvName.setText(name);
-        blocked = thesisDB.checkIfBlockedByID(id);
         String state = thesisDB.checkContactState(id);
         switch(state){
             case "1":
@@ -72,19 +71,19 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
                 if(cbText.isChecked() && cbCall.isChecked()){
                     //change state to 3 (block call and texts)
                     thesisDB.changeContactState(id,"3");
-                    Log.v(TAG,"Contact State: Blocking Calls and Texts");
+                    Log.v(TAG,"["+name+"] Contact State: Blocking Calls and Texts");
                 }else if(!cbText.isChecked() && cbCall.isChecked()){
                     //change state to 2 (block calls)
                     thesisDB.changeContactState(id,"2");
-                    Log.v(TAG,"Contact State: Blocking Calls");
+                    Log.v(TAG,"["+name+"] Contact State: Blocking Calls");
                 }else if(cbText.isChecked() && !cbCall.isChecked()){
                     //insert with state 1 (block texts)
                     thesisDB.insertIntoBlocked(id,name,nums,"1");
-                    Log.v(TAG,"Contact State: Blocking Texts");
+                    Log.v(TAG,"["+name+"] Contact State: Blocking Texts");
                 }else{
                     //delete from db
                     thesisDB.removeBlocked(id);
-                    Log.v(TAG,"Contact State: No Block");
+                    Log.v(TAG,"["+name+"] Contact State: No Block");
                 }
             }
         });
@@ -94,19 +93,19 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
                 if(cbText.isChecked() && cbCall.isChecked()){
                     //change state to 3 (block call and texts)
                     thesisDB.changeContactState(id,"3");
-                    Log.v(TAG,"Contact State: Blocking Calls and Texts");
+                    Log.v(TAG,"["+name+"] Contact State: Blocking Calls and Texts");
                 }else if(!cbText.isChecked() && cbCall.isChecked()){
                     //change state to 2 (block calls)
                     thesisDB.insertIntoBlocked(id,name,nums,"2");
-                    Log.v(TAG,"Contact State: Blocking Calls");
+                    Log.v(TAG,"["+name+"] Contact State: Blocking Calls");
                 }else if(cbText.isChecked() && !cbCall.isChecked()){
                     //insert with state 1 (block texts)
                     thesisDB.changeContactState(id,"1");
-                    Log.v(TAG,"Contact State: Blocking Texts");
+                    Log.v(TAG,"["+name+"] Contact State: Blocking Texts");
                 }else{
                     //delete from db
                     thesisDB.removeBlocked(id);
-                    Log.v(TAG,"Contact State: No Block");
+                    Log.v(TAG,"["+name+"] Contact State: No Block");
                 }
             }
         });
@@ -115,7 +114,10 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
 
 
 
+        //OLD Switch Code
 
+        /*
+        blocked = thesisDB.checkIfBlockedByID(id);
         if(blocked){
             swBlock.setChecked(true);
         }else{
@@ -142,7 +144,7 @@ public class ContactPersonListAdapter extends ArrayAdapter<ContactPerson> {
                 }
                 Log.v("Contact state=",""+contactPerson.isContactBlocked());
             }
-        });
+        });*/
         return convertView;
     }
 }

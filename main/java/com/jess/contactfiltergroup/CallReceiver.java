@@ -24,11 +24,17 @@ public class CallReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         SQLiteDatabase db = context.openOrCreateDatabase("thesis.db", 0, null);
-        Cursor contactNumCursor = db.rawQuery("SELECT * From contactNum",null);
+        DatabaseHelper thesisDB = new DatabaseHelper(context);
         ITelephony telephonyService;
         try{
             String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
             String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
+
+            if(number.substring(0,3).equals("+63")){
+                number = "0"+number.substring(3,13);
+                Log.v("substring","success");
+            }
+
             if(state.equalsIgnoreCase(TelephonyManager.EXTRA_STATE_RINGING)){
                 TelephonyManager telephonyManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
                 Toast.makeText(context,"Ring "+number, Toast.LENGTH_SHORT).show();
@@ -57,18 +63,61 @@ public class CallReceiver extends BroadcastReceiver {
                     IBinder retbinder = (IBinder) getService.invoke(serviceManagerObject, "phone");
                     Method serviceMethod = telephonyStubClass.getMethod("asInterface", IBinder.class);
                     telephonyObject = serviceMethod.invoke(null, retbinder);
-                    if(contactNumCursor.moveToFirst()){
+
+                    //Database Retrieval
+                    if(db.rawQuery("SELECT * From contactNum where number = "+number,null)!= null) {
+                        Log.v(TAG, "numQuery: Success");
+                        Cursor contactNumCursor = db.rawQuery("SELECT * From contactNum where number = '" + number + "'", null);
+                        if (contactNumCursor == null)
+                            Log.v(TAG, "contactNumCursor is NULL!");
+                        else
+                            Log.v(TAG, "contactNumCursor size: " + contactNumCursor.getCount());
+                        while (contactNumCursor.moveToNext()) {
+                            String dbNumber = contactNumCursor.getString(contactNumCursor.getColumnIndex("number"));
+                            Log.v(TAG, "Database number to match = " + dbNumber);
+                            if (dbNumber.equalsIgnoreCase(number)) {
+                                Log.v(TAG, "Number Matched: TRUE");
+                                String dbNumID = contactNumCursor.getString(contactNumCursor.getColumnIndex("contactNum_id"));
+                                Log.v(TAG, "Number ID =" + dbNumID);
+                                Cursor numDetailCursor = db.rawQuery("SELECT * FROM contactNumDetails WHERE contactNum_id = '" + dbNumID + "'", null);
+                                if (numDetailCursor == null)
+                                    Log.v(TAG, "numDetailCursor is NULL!");
+                                else
+                                    Log.v(TAG, "numDetailCursor size: " + numDetailCursor.getCount());
+                                while (numDetailCursor.moveToNext()) {
+                                    String contactID = numDetailCursor.getString(numDetailCursor.getColumnIndex("contact_id"));
+                                    Log.v(TAG, "check number contact ID: " + contactID);
+                                    String dbState = thesisDB.checkContactState(contactID);
+                                    switch (dbState) {
+                                        case "2":
+                                            //Blocking Mechanism
+                                            Toast.makeText(context,"Blocked call from: "+number,Toast.LENGTH_SHORT).show();
+                                            telephonyEndCall = telephonyClass.getMethod("endCall");
+                                            telephonyEndCall.invoke(telephonyObject);
+                                            break;
+                                        case "3":
+                                            //Blocking Mechanism
+                                            Toast.makeText(context,"Blocked call from: "+number,Toast.LENGTH_SHORT).show();
+                                            telephonyEndCall = telephonyClass.getMethod("endCall");
+                                            telephonyEndCall.invoke(telephonyObject);
+                                            break;
+                                        default:
+                                    }
+                                    break;
+                                }
+                                break;
+                            }
+                        }
+                        contactNumCursor.close();
+                    }
+                    /*if(contactNumCursor.moveToFirst()){
                         do{
                             String dbNumber = contactNumCursor.getString(contactNumCursor.getColumnIndex("number"));
                             if(dbNumber.equalsIgnoreCase(number) ) {
-
-                                Toast.makeText(context,"Blocked call from: "+number,Toast.LENGTH_SHORT).show();
-                                telephonyEndCall = telephonyClass.getMethod("endCall");
-                                telephonyEndCall.invoke(telephonyObject);
                             }
                             Log.v("To Match:",contactNumCursor.getString(contactNumCursor.getColumnIndex("number")));
                         }while(contactNumCursor.moveToNext());
-                    }
+                    }*/
 
                 }catch (Exception e){
                     e.printStackTrace();

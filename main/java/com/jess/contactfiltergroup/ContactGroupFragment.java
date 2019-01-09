@@ -1,7 +1,9 @@
 package com.jess.contactfiltergroup;
 
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -27,7 +30,7 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
     private final DatabaseHelper thesisDB;
 
     private ArrayList<ContactPerson> arrayListCP;
-    private ArrayAdapter<ContactGroup> contactGroupListAdapter;
+    private ContactGroupListAdapter contactGroupListAdapter;
 
     public static ArrayList<ContactGroup> contactGroupArrayList;
 
@@ -49,6 +52,28 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
         View view = inflater.inflate(R.layout.fragment_contactgroups,container,false);
         contactGroupListView = view.findViewById(R.id.contactGroupListView);
         new LoadContacts().execute();
+        contactGroupListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.v("Test","ItemClick");
+                final android.support.v7.app.AlertDialog.Builder adb = new android.support.v7.app.AlertDialog.Builder(getActivity());
+                adb.setTitle("Delete?");
+                adb.setMessage("Are you sure you want to delete " + position);
+                final int positionToRemove = position;
+                adb.setNegativeButton("Cancel", null);
+                adb.setPositiveButton("Ok", new AlertDialog.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        int groupID = contactGroupArrayList.get(positionToRemove).getId();
+                        if(thesisDB.deleteAppGroup(String.valueOf(groupID))){
+                            Log.v(TAG,"Delete Successful");
+                        }
+                        contactGroupArrayList.remove(positionToRemove);
+                        contactGroupListAdapter.notifyDataSetChanged();
+                    }});
+                adb.show();
+                return false;
+            }
+        });
         return view;
     }
 
@@ -100,8 +125,7 @@ public class ContactGroupFragment extends android.support.v4.app.Fragment {
                         }
                     }
                 }
-                ContactGroup contactGroup = new ContactGroup(groupName,groupContactPerson,groupState);
-                contactGroup.setId(groupID);
+                ContactGroup contactGroup = new ContactGroup(Integer.parseInt(groupID),groupName,groupContactPerson,groupState);
                 contactGroupArrayList.add(contactGroup);
                 Log.v("Retrieved group from DB",contactGroup.getName());
                 Log.v("State check",contactGroup.getState());

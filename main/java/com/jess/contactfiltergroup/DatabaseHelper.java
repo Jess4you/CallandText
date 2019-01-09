@@ -113,7 +113,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + COLUMN_QUESTIONONE_ANSWER + " VARCHAR, "
                 + COLUMN_QUESTION_TWO + " VARCHAR, "
                 + COLUMN_QUESTIONTWO_ANSWER + " VARCHAR); ");
-
         //CONTACT TABLES
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ TABLE_CONTACTS +" ("
                 +COLUMN_CONTACT_ID+" VARCHAR PRIMARY KEY, "
@@ -239,7 +238,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.v("State change","Fail");
         return false;
     }
-
+    //TODO: Delete not working yet
+    public boolean deleteAppGroup(String groupID){
+        SQLiteDatabase db = this.getWritableDatabase();
+        if(db.delete(TABLE_APPGROUPS,COLUMN_APPGROUP_ID +" = " +groupID,null)>0)
+            return true;
+        return false;
+    }
     public boolean checkIfAppGroupState1(String groupID){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT "+COLUMN_APPGROUP_STATE+" FROM "+TABLE_APPGROUPS+" WHERE "+COLUMN_APPGROUP_ID+" = "+groupID+";", null);
@@ -441,17 +446,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             Log.d("contact",contactName);
                             Log.d("number",contactNums[i]);
 
-                            if(state.equalsIgnoreCase("1")) {
+                            switch(state){
+                                case "1":
+                                    if(checkIfBlockedByID(contactID))
+                                        changeContactState(contactID,"1");
+                                    else
+                                        insertIntoBlocked(contactID,contactName,contactNums,"1");
+                                    break;
+                                case "2":
+                                    if(checkIfBlockedByID(contactID))
+                                        changeContactState(contactID,"2");
+                                    else
+                                        insertIntoBlocked(contactID,contactName,contactNums,"2");
+                                    break;
+                                case "3":
+                                    if(checkIfBlockedByID(contactID))
+                                        changeContactState(contactID,"3");
+                                    else
+                                        insertIntoBlocked(contactID,contactName,contactNums,"3");
+                                    break;
+                                default:
+                                    removeBlocked(blockedID);
+                            }
+                            ContactFilter.getContactPersonArrayAdapter().notifyDataSetChanged();
+
+                            //OLD switch
+                            /*if(state.equalsIgnoreCase("1")) {
                                 insertIntoBlocked(contactID, contactName, contactNums, "1");
                                 ContactFilter.getContactPersonArrayAdapter().notifyDataSetChanged();
-                                /*ArrayList<ContactPerson> CPA = ContactPersonFragment.getContactPersonArrayList();
-                                ContactPersonFragment.setContactPersonArrayList(CPA);*/
+                                *//*ArrayList<ContactPerson> CPA = ContactPersonFragment.getContactPersonArrayList();
+                                ContactPersonFragment.setContactPersonArrayList(CPA);*//*
                             }
 
                             else {
                                 removeBlocked(blockedID);
                                 ContactFilter.getContactPersonArrayAdapter().notifyDataSetChanged();
-                            }
+                            }*/
                         }
                     }
                 }
@@ -461,18 +491,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.v("State change","Fail");
         return false;
     }
-    public boolean checkIfContactGroupState1(String groupID){
+    public String checkContactGroupState(String groupID){
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT "+COLUMN_CONTACTGROUP_STATE+" FROM "+TABLE_CONTACTGROUPS+" WHERE "+COLUMN_CONTACTGROUP_ID+" = "+groupID+";", null);
         while (cursor.moveToNext()){
             String state = cursor.getString(cursor.getColumnIndex(COLUMN_CONTACTGROUP_STATE));
-            if(state.equalsIgnoreCase("1")){
-                cursor.close();
-                return true;
-            }
+            return state;
         }
         cursor.close();
-        return false;
+        return "0";
     }
 
     public Cursor readContact(){

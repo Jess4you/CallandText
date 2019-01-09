@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -59,7 +60,6 @@ public class ContactPersonFragment extends Fragment {
         contactPersonListView = view.findViewById(R.id.contactPersonListView);
         Button btnAddGroup = (Button)view.findViewById(R.id.buttonAddGroup);
         thesisDB = new DatabaseHelper(mContext);
-
         //Start background thread
         new LoadContacts().execute();
 
@@ -84,11 +84,10 @@ public class ContactPersonFragment extends Fragment {
                                     newGroup.add(contactPersonArrayList.get(i));
                             }
                             String grpName = groupName.getText().toString();
-                            ContactGroup contactGroup = new ContactGroup(grpName, newGroup,"1");
-                            int rowID = ContactFilter.getThesisDB().insertNewContactGroup(contactGroup.getName(),contactGroup.getContactPersonArrayList());
+                            int rowID = ContactFilter.getThesisDB().insertNewContactGroup(grpName,newGroup);
+                            ContactGroup contactGroup = new ContactGroup(rowID,grpName, newGroup,"1");
 
                             //Updating grouplist
-                            contactGroup.setId(String.valueOf(rowID));
                             ArrayList<ContactGroup> CGA = ContactGroupFragment.getContactGroupArrayList();
                             CGA.add(contactGroup);
                             ContactGroupFragment.setContactGroupArrayList(CGA);
